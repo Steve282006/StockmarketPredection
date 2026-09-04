@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuantAI Pro - Machine Learning Stock Analysis & Prediction Platform</title>
+  <meta name="description" content="State-of-the-art machine learning stock market forecasting, technical analysis, multi-model ensemble suite, and algorithmic backtester.">
+  
+  <!-- Fonts & Libraries -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Marquee Ticker Tape -->
+  <div class="ticker-tape">
+    <div class="ticker-track">
+      <span class="ticker-item"><strong class="symbol">AAPL</strong> <span class="price">$224.50</span> <span class="change pos">+1.4%</span></span>
+      <span class="ticker-item"><strong class="symbol">NVDA</strong> <span class="price">$192.91</span> <span class="change pos">+2.8%</span></span>
+      <span class="ticker-item"><strong class="symbol">TSLA</strong> <span class="price">$250.10</span> <span class="change neg">-0.6%</span></span>
+      <span class="ticker-item"><strong class="symbol">MSFT</strong> <span class="price">$440.25</span> <span class="change pos">+0.9%</span></span>
+      <span class="ticker-item"><strong class="symbol">GOOGL</strong> <span class="price">$180.40</span> <span class="change pos">+1.1%</span></span>
+      <span class="ticker-item"><strong class="symbol">AMZN</strong> <span class="price">$185.60</span> <span class="change pos">+0.7%</span></span>
+      <span class="ticker-item"><strong class="symbol">BTC-USD</strong> <span class="price">$64,073.27</span> <span class="change pos">+3.2%</span></span>
+      <span class="ticker-item"><strong class="symbol">SPY</strong> <span class="price">$550.40</span> <span class="change pos">+0.4%</span></span>
+    </div>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Top Navigation Header -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-icon">📈</div>
+        <div class="brand-text">
+          <h1>Quant<span class="gradient-text">AI Pro</span></h1>
+          <span class="subtitle">Quantitative Financial Machine Learning</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-links">
+        <a href="#terminal-section" class="nav-link active" data-tab="terminal">Live Terminal</a>
+        <a href="#ml-section" class="nav-link" data-tab="ml">ML Suite</a>
+        <a href="#backtest-section" class="nav-link" data-tab="backtest">Backtester</a>
+        <a href="#forecast-section" class="nav-link" data-tab="forecast">Forecast Path</a>
+        <a href="#synopsis-section" class="nav-link" data-tab="synopsis">Project Synopsis</a>
+      </nav>
+      
+      <!-- Quick Ticker Search Bar -->
+      <div class="search-section">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="ticker-input" placeholder="Symbol (AAPL, NVDA, TSLA)..." value="AAPL" autocomplete="off">
+          <button id="analyze-btn" class="btn btn-primary">
+            <span class="btn-text">Predict</span>
+            <div class="spinner hidden" id="btn-spinner"></div>
+          </button>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div class="status-badge pulse-online">
+          <span class="dot"></span> System Live
+        </div>
+      </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-banner glass-panel">
+      <div class="hero-content">
+        <div class="badge-tag">🤖 Multi-Model Ensemble Intelligence</div>
+        <h2>Machine Learning Stock Forecasting & Algorithmic Strategy Engine</h2>
+        <p>Combining Random Forest, Gradient Boosting, Ridge Regression, and Neural Networks with 18 quantitative technical indicators to deliver real-time stock predictions and statistical backtesting.</p>
+        
+        <div class="hero-actions">
+          <button class="btn btn-glow" id="hero-demo-btn">⚡ Run AAPL Analysis</button>
+          <a href="#synopsis-section" class="btn btn-outline">📄 Read Synopsis</a>
+        </div>
+      </div>
+    </div>
+    </section>
+
+    <!-- Main Content Layout -->
+    <main class="dashboard-grid">
+
+      <!-- Ticker & Period Controls Bar -->
+      <section class="ticker-bar-card glass-panel" id="terminal-section">
+        <div class="quick-tickers-title">Quick Asset Selector:</div>
+        <div class="ticker-pills" id="quick-tickers">
+          <button class="pill-btn active" data-symbol="AAPL">AAPL</button>
+          <button class="pill-btn" data-symbol="NVDA">NVDA</button>
+          <button class="pill-btn" data-symbol="TSLA">TSLA</button>
+          <button class="pill-btn" data-symbol="MSFT">MSFT</button>
+          <button class="pill-btn" data-symbol="GOOGL">GOOGL</button>
+          <button class="pill-btn" data-symbol="AMZN">AMZN</button>
+          <button class="pill-btn" data-symbol="META">META</button>
+          <button class="pill-btn" data-symbol="SPY">SPY</button>
+          <button class="pill-btn" data-symbol="BTC-USD">BTC-USD</button>
+        </div>
+        
+        <div class="period-controls">
+          <label>History Horizon:</label>
+          <select id="period-select" class="custom-select">
+            <option value="6mo">6 Months</option>
+            <option value="1y">1 Year</option>
+            <option value="2y" selected>2 Years</option>
+            <option value="5y">5 Years</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Asset Summary Banner Card -->
+      <section class="asset-banner glass-panel">
+        <div class="asset-header">
+          <div class="asset-meta">
+            <h2 id="asset-symbol">AAPL</h2>
+            <span class="asset-name" id="asset-name">Apple Inc.</span>
+          </div>
+          <div class="price-block">
+            <div class="price-val" id="asset-price">$224.50</div>
+            <div class="price-date" id="asset-date">As of 2026-09-03</div>
+          </div>
+        </div>
+
+        <div class="signal-block">
+          <div class="signal-card" id="signal-card">
+            <span class="signal-label">ML Recommendation</span>
+            <span class="signal-value badge-buy" id="signal-value">BUY</span>
+          </div>
+          <div class="metric-mini">
+            <span class="mini-label">Dir. Accuracy</span>
+            <span class="mini-val" id="metric-accuracy">64.2%</span>
+          </div>
+          <div class="metric-mini">
+            <span class="mini-label">Ensemble R²</span>
+            <span class="mini-val" id="metric-r2">0.784</span>
+          </div>
+          <div class="metric-mini">
+            <span class="mini-label">30D Forecast</span>
+            <span class="mini-val positive" id="metric-forecast-return">+4.85%</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Main Price & Technical Indicators Chart -->
+      <section class="chart-section glass-panel">
+        <div class="card-header">
+          <h3>📊 Historical Price & Indicator Bands</h3>
+          <div class="chart-toggles">
+            <label class="toggle-chip"><input type="checkbox" id="toggle-sma20" checked> SMA 20</label>
+            <label class="toggle-chip"><input type="checkbox" id="toggle-sma50" checked> SMA 50</label>
+            <label class="toggle-chip"><input type="checkbox" id="toggle-bb" checked> Bollinger Bands</label>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="priceChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Sub-Charts (RSI & MACD) -->
+      <section class="oscillators-grid">
+        <div class="glass-panel sub-chart-card">
+          <div class="card-header">
+            <h4>Relative Strength Index (RSI 14)</h4>
+          </div>
+          <div class="chart-container-sm">
+            <canvas id="rsiChart"></canvas>
+          </div>
+        </div>
+        <div class="glass-panel sub-chart-card">
+          <div class="card-header">
+            <h4>MACD (12, 26, 9)</h4>
+          </div>
+          <div class="chart-container-sm">
+            <canvas id="macdChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Machine Learning Horizon Forecast Table -->
+      <section class="forecast-section glass-panel" id="forecast-section">
+        <div class="card-header">
+          <h3>🎯 30-Day Machine Learning Price Target Horizon</h3>
+          <span class="tag-badge">90% Statistical Confidence Bounds</span>
+        </div>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Forecast Horizon</th>
+                <th>Predicted Price</th>
+                <th>Expected Return</th>
+                <th>Lower Bound (90%)</th>
+                <th>Upper Bound (90%)</th>
+              </tr>
+            </thead>
+            <tbody id="forecast-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Model Performance Matrix & Feature Ranking -->
+      <section class="ml-insights-grid" id="ml-section">
+        
+        <!-- Model Suite Matrix -->
+        <div class="glass-panel">
+          <div class="card-header">
+            <h3>🤖 Model Suite Comparison Matrix</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table compact">
+              <thead>
+                <tr>
+                  <th>Model Algorithm</th>
+                  <th>Directional Acc (%)</th>
+                  <th>RMSE</th>
+                  <th>MAE</th>
+                  <th>R² Score</th>
+                </tr>
+              </thead>
+              <tbody id="models-table-body">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Feature Importance Chart -->
+        <div class="glass-panel">
+          <div class="card-header">
+            <h3>⚡ Feature Importance Ranking</h3>
+          </div>
+          <div class="chart-container-sm">
+            <canvas id="featureImportanceChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Algorithmic Backtesting Simulator Section -->
+      <section class="backtest-section glass-panel" id="backtest-section">
+        <div class="card-header">
+          <h3>💼 Algorithmic Strategy Backtesting Simulator</h3>
+          <span class="tag-badge glow">Model Signals vs Buy & Hold Benchmark</span>
+        </div>
+
+        <div class="backtest-metrics-grid">
+          <div class="metric-card">
+            <span class="m-label">Strategy Total ROI</span>
+            <span class="m-value positive" id="bt-roi">+28.4%</span>
+          </div>
+          <div class="metric-card">
+            <span class="m-label">Buy & Hold ROI</span>
+            <span class="m-value neutral" id="bt-bh-roi">+14.2%</span>
+          </div>
+          <div class="metric-card">
+            <span class="m-label">Sharpe Ratio</span>
+            <span class="m-value" id="bt-sharpe">1.85</span>
+          </div>
+          <div class="metric-card">
+            <span class="m-label">Max Drawdown</span>
+            <span class="m-value negative" id="bt-mdd">-8.3%</span>
+          </div>
+          <div class="metric-card">
+            <span class="m-label">Win Rate</span>
+            <span class="m-value" id="bt-winrate">61.5%</span>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <canvas id="backtestChart"></canvas>
+        </div>
+      </section>
+
+      <!-- Project Synopsis & Documentation Viewer -->
+      <section class="synopsis-section glass-panel" id="synopsis-section">
+        <div class="card-header">
+          <h3>📑 Official Project Synopsis & Documentation</h3>
+          <span class="tag-badge">Academic & Engineering Specification</span>
+        </div>
+        <div class="synopsis-content-box" id="synopsis-box">
+          <div class="loading-synopsis">Loading project synopsis...</div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-links">
+        <a href="stock_analysis_prediction.ipynb" download>📥 Download Jupyter Notebook (.ipynb)</a>
+        <a href="#synopsis-section">📑 Project Synopsis</a>
+        <a href="#terminal-section">📈 Live Terminal</a>
+      </div>
+      <p>QuantAI Pro Financial Machine Learning System &copy; 2026. Built with Python, Scikit-Learn, and Chart.js.</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
