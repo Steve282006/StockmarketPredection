@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "stock-ml-engine"
 version = "0.1.0"
 description = "Machine Learning Stock Analysis & Prediction Platform"
+requires-python = ">=3.10"
 dependencies = [
     "pandas>=2.0.0",
     "numpy>=1.24.0",
@@ -17,3 +18,8 @@ dependencies = [
     "uvicorn>=0.22.0",
     "pydantic>=2.0.0"
 ]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ml_engine*", "api*"]
+exclude = ["public*", "scratch*", "tests*"]
