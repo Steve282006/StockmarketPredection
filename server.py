@@ -1,17 +1,33 @@
 import os
-import json
 import logging
-from urllib.parse import parse_qs, urlparse
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
 from ml_engine.pipeline import run_full_ml_pipeline
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-PORT = 8000
+# Top-level FastAPI application instance for Vercel & local server
+app = FastAPI(
+    title="QuantAI Stock ML Platform",
+    description="Machine Learning Stock Analysis, Forecasting & Backtesting API",
+    version="1.0.0"
+)
+
+# Enable CORS for cross-origin requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
 SYNOPSIS_FILE = os.path.join(os.path.dirname(__file__), "SYNOPSIS.md")
-README_FILE = os.path.join(os.path.dirname(__file__), "README.md")
 
 POPULAR_STOCKS = [
     {"symbol": "AAPL", "name": "Apple Inc.", "sector": "Technology"},
@@ -25,87 +41,54 @@ POPULAR_STOCKS = [
     {"symbol": "BTC-USD", "name": "Bitcoin USD", "sector": "Cryptocurrency"}
 ]
 
-# Simple in-memory cache for recent pipeline queries
 CACHE = {}
 
-class StockMLRequestHandler(SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=PUBLIC_DIR, **kwargs)
+@app.get("/api/health")
+def health_check():
+    return {"status": "ok", "service": "QuantAI Stock ML Platform"}
 
-    def end_headers(self):
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        super().end_headers()
+@app.get("/api/stocks")
+def list_stocks():
+    return {"stocks": POPULAR_STOCKS}
 
-    def do_OPTIONS(self):
-        self.send_response(200)
-        self.end_headers()
-
-    def do_GET(self):
-        parsed_url = urlparse(self.path)
-        path = parsed_url.path
-        query = parse_qs(parsed_url.query)
-
-        if path == "/api/stocks":
-            self.send_json_response(200, {"stocks": POPULAR_STOCKS})
-            return
-
-        elif path == "/api/synopsis":
-            try:
-                content = ""
-                if os.path.exists(SYNOPSIS_FILE):
-                    with open(SYNOPSIS_FILE, "r", encoding="utf-8") as f:
-                        content = f.read()
-                self.send_json_response(200, {"synopsis": content})
-            except Exception as e:
-                self.send_json_response(500, {"error": str(e)})
-            return
-
-        elif path == "/api/analyze":
-            symbol = query.get("symbol", ["AAPL"])[0].upper().strip()
-            period = query.get("period", ["2y"])[0]
-            cache_key = f"{symbol}_{period}"
-
-            if cache_key in CACHE:
-                logger.info(f"Serving cached pipeline results for {cache_key}")
-                self.send_json_response(200, CACHE[cache_key])
-                return
-
-            try:
-                logger.info(f"Running ML pipeline for request: symbol={symbol}, period={period}")
-                pipeline_result = run_full_ml_pipeline(symbol=symbol, period=period)
-                CACHE[cache_key] = pipeline_result
-                self.send_json_response(200, pipeline_result)
-            except Exception as e:
-                logger.exception(f"Error running pipeline for {symbol}")
-                self.send_json_response(500, {"error": str(e), "message": f"Failed to analyze {symbol}"})
-            return
-
-        elif path == "/api/health":
-            self.send_json_response(200, {"status": "ok", "service": "QuantAI Stock ML Platform"})
-            return
-
-        # Serve static frontend files
-        super().do_GET()
-
-    def send_json_response(self, status_code: int, data: dict):
-        response_bytes = json.dumps(data).encode("utf-8")
-        self.send_response(status_code)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(response_bytes)))
-        self.end_headers()
-        self.wfile.write(response_bytes)
-
-def run_server():
-    server_address = ("", PORT)
-    httpd = HTTPServer(server_address, StockMLRequestHandler)
-    print(f"[INFO] QuantAI Web App Server running at http://localhost:{PORT}")
+@app.get("/api/synopsis")
+def get_synopsis():
     try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nShutting down server...")
-        httpd.server_close()
+        content = ""
+        if os.path.exists(SYNOPSIS_FILE):
+            with open(SYNOPSIS_FILE, "r", encoding="utf-8") as f:
+                content = f.read()
+        return {"synopsis": content}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/analyze")
+def analyze_stock(symbol: str = "AAPL", period: str = "2y"):
+    symbol = symbol.upper().strip()
+    cache_key = f"{symbol}_{period}"
+
+    if cache_key in CACHE:
+        logger.info(f"Serving cached pipeline results for {cache_key}")
+        return CACHE[cache_key]
+
+    try:
+        logger.info(f"Running ML pipeline for request: symbol={symbol}, period={period}")
+        pipeline_result = run_full_ml_pipeline(symbol=symbol, period=period)
+        CACHE[cache_key] = pipeline_result
+        return pipeline_result
+    except Exception as e:
+        logger.exception(f"Error running pipeline for {symbol}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze {symbol}: {str(e)}")
+
+# Serve static frontend web files if directory exists
+if os.path.exists(PUBLIC_DIR):
+    @app.get("/")
+    def serve_index():
+        return FileResponse(os.path.join(PUBLIC_DIR, "index.html"))
+
+    app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
 
 if __name__ == "__main__":
-    run_server()
+    import uvicorn
+    print("[INFO] Starting FastAPI server on http://localhost:8000")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
