@@ -19,7 +19,5 @@ dependencies = [
     "pydantic>=2.0.0"
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["ml_engine*", "api*"]
-exclude = ["public*", "scratch*", "tests*"]
+[tool.setuptools]
+packages = ["ml_engine", "api"]
