@@ -6,10 +6,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+# Ensure root folder is in sys.path
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if root_dir not in sys.path:
+    sys.path.insert(0, root_dir)
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Top-level FastAPI application instance for Vercel & local server
+# Top-level FastAPI application instance for Vercel Serverless Functions
 app = FastAPI(
     title="QuantAI Stock ML Platform",
     description="Machine Learning Stock Analysis, Forecasting & Backtesting API",
@@ -25,8 +30,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
-SYNOPSIS_FILE = os.path.join(os.path.dirname(__file__), "SYNOPSIS.md")
+PUBLIC_DIR = os.path.join(root_dir, "public")
+SYNOPSIS_FILE = os.path.join(root_dir, "SYNOPSIS.md")
 
 POPULAR_STOCKS = [
     {"symbol": "AAPL", "name": "Apple Inc.", "sector": "Technology"},
@@ -81,7 +86,7 @@ def analyze_stock(symbol: str = "AAPL", period: str = "2y"):
         logger.exception(f"Error running pipeline for {symbol}")
         raise HTTPException(status_code=500, detail=f"Failed to analyze {symbol}: {str(e)}")
 
-# Serve static frontend web files if directory exists
+# Mount static frontend web files if directory exists
 if os.path.exists(PUBLIC_DIR):
     @app.get("/")
     def serve_index():
